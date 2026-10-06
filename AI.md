@@ -44,6 +44,39 @@ The last column lists options the AI agent proposed during the design discussion
 | 11 | Tests are documented at class level (rules covered), with comments only where the intent is not obvious | Test names already describe behaviour; per-test Javadoc would duplicate them and drift | `@DisplayName` on every test |
 | 12 | **Not thread-safe** (for now) | The task asks for a *simple* library; "multiple simultaneous matches" means many live matches, not many threads. My first choice, lock-free concurrent maps, forced reserve-then-rollback logic, and race tests are non-deterministic | `synchronized` methods or a decorator. Kept in the README as the upgrade path |
 | 13 | SOLID split: `Scoreboard` (service) only orchestrates the four core operations; it depends on a `MatchRepository` interface (storage and id sequence) injected through a public constructor, with `InMemoryMatchRepository` as the default; `Match` (domain) holds the score rules and summary order; `TeamName` (domain) validates and compares names | Single responsibility per class, dependency inversion for storage, and a small `Scoreboard`. Since the types live in separate packages they are public, so callers can also plug in their own repository | All logic and the match map inside `Scoreboard` (an intermediate "minimal code" version); team names as plain strings validated by a helper in `Scoreboard`; a JPMS `module-info.java` (added, then removed: it hid nothing) |
+| 14 | Additional operation: `subscribe(listener)` publishing a sealed `ScoreboardEvent` (`MatchStarted`, `ScoreChanged`, `MatchFinished`), synchronously, in subscription order, only for changes after subscribing; a failing listener does not stop the others and is reported afterwards as `ListenerFailedException`; cancellation via the returned `Subscription` | Live data is consumed by push, not polling; a sealed event type keeps listeners lambda-friendly and lets the compiler check exhaustive handling | Other features: `findLiveMatch`, `correctScore`, pluggable summary ordering, a goal timeline, finished-match history. A listener interface with one method per event; ignoring listener failures or letting the first one propagate; replaying the current state to new subscribers |
+
+## Brainstorming the additional operation
+
+The additional operation was chosen in a structured brainstorm with the agent, on its own branch after the core
+operations were merged.
+
+**Candidates considered**, grouped by what each would demonstrate:
+
+| Theme | Candidates |
+|---|---|
+| Practical API | `findLiveMatch(team)` (look up a live match by team name), `correctScore(id, home, away)` (absolute correction), `getTopMatches(n)`, `formatSummary()` |
+| Live-football domain | `subscribe(listener)` (push updates), `getMatchEvents(id)` (goal timeline), `pauseMatch(id)` (half-time), `abandonMatch(id)`, penalty shootouts, red cards |
+| Design (SOLID) | `getSummary(SummaryOrder)` (pluggable ordering, open/closed principle), `startMatches(fixtures)` (all-or-nothing batch) |
+| History and operations | `getFinishedMatches()`, `undoLastEvent(id)`, `exportState()`/`restore()` |
+
+**Shortlist.** `getSummary(SummaryOrder)` as the best fit for the SOLID story, `findLiveMatch` as the most practical
+for an id-based API, and `subscribe` as the strongest fit for a live sports-data company.
+
+**Choice: `subscribe`.** Live data is consumed by push, not polling, so it adds the most value for real consumers,
+and it plugs into the design without changing the core operations.
+
+**Design questions, each decided before any code was written:**
+
+| Question | Options | Decision |
+|---|---|---|
+| Shape of the events | A sealed `ScoreboardEvent` with records, consumed by a `Consumer`; or a listener interface with one method per event | Sealed events: lambda-friendly, and the compiler checks that a `switch` handles every type |
+| A listener throws | Isolate and report afterwards; isolate and ignore; let the first failure propagate | Isolate and report: every listener gets the event, then `ListenerFailedException` with the rest suppressed |
+| A new subscriber and live matches | Only future events; or replay the current state as events | Only future events; `getSummary()` gives the current state |
+
+Smaller rules agreed with the design: synchronous delivery in subscription order, rejected calls publish nothing,
+`cancel()` is safe to repeat and to call during delivery, and subscribing the same listener twice creates two
+subscriptions. The full design was presented in the chat and approved before the failing tests were written.
 
 ## Prompt history
 
@@ -97,3 +130,8 @@ The instructions that shaped the work, with a short note on what came out of eac
    The public methods are required by the task, so the agent moved everything else out: name validation into a
    `TeamName` value type, the summary order and argument checks into `Match`, leaving `Scoreboard` as a thin
    orchestrator. Tests unchanged (decision 13).
+
+9. > let's do 3. subscribe. Don't forget that we do TDD
+
+   The agent asked three design questions (event shape, listener failures, replay of current state), presented a
+   short design, then wrote the failing `SubscribeTest` first and implemented `EventPublisher` (decision 14).
