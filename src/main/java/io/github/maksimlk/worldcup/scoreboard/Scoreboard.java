@@ -7,7 +7,13 @@ import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
 import io.github.maksimlk.worldcup.scoreboard.model.MatchSnapshot;
 import io.github.maksimlk.worldcup.scoreboard.model.ScoreChange;
 import io.github.maksimlk.worldcup.scoreboard.model.Side;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Tracks live football World Cup matches.
@@ -18,6 +24,16 @@ import java.util.List;
  * must synchronize access themselves.
  */
 public final class Scoreboard {
+
+    /** Total score descending; ties go to the most recently started match, i.e. the higher id. */
+    private static final Comparator<Match> SUMMARY_ORDER = Comparator
+            .comparingInt(Match::totalScore)
+            .thenComparingLong(match -> match.id().value())
+            .reversed();
+
+    private final Map<MatchId, Match> liveMatches = new HashMap<>();
+    private final Set<Team> playingTeams = new HashSet<>();
+    private long lastMatchId;
 
     /** Creates an empty scoreboard. */
     public Scoreboard() {
@@ -33,7 +49,19 @@ public final class Scoreboard {
      *         if either team is already playing in a live match
      */
     public MatchId startMatch(String homeTeam, String awayTeam) {
-        throw new UnsupportedOperationException("not implemented");
+        Team home = Team.of(homeTeam, "homeTeam");
+        Team away = Team.of(awayTeam, "awayTeam");
+        if (home.equals(away)) {
+            throw new IllegalArgumentException("A team cannot play itself: " + home);
+        }
+        requireNotPlaying(home);
+        requireNotPlaying(away);
+
+        MatchId id = new MatchId(++lastMatchId);
+        liveMatches.put(id, new Match(id, home, away));
+        playingTeams.add(home);
+        playingTeams.add(away);
+        return id;
     }
 
     /**
@@ -46,7 +74,10 @@ public final class Scoreboard {
      *         if a goal is cancelled for a side with a score of zero
      */
     public void updateScore(MatchId matchId, Side side, ScoreChange change) {
-        throw new UnsupportedOperationException("not implemented");
+        Objects.requireNonNull(matchId, "matchId");
+        Objects.requireNonNull(side, "side");
+        Objects.requireNonNull(change, "change");
+        liveMatch(matchId).apply(side, change);
     }
 
     /**
@@ -57,7 +88,11 @@ public final class Scoreboard {
      *         if the match is unknown or already finished
      */
     public void finishMatch(MatchId matchId) {
-        throw new UnsupportedOperationException("not implemented");
+        Objects.requireNonNull(matchId, "matchId");
+        Match match = liveMatch(matchId);
+        liveMatches.remove(matchId);
+        playingTeams.remove(match.homeTeam());
+        playingTeams.remove(match.awayTeam());
     }
 
     /**
@@ -67,6 +102,23 @@ public final class Scoreboard {
      * @return an unmodifiable snapshot that later changes do not affect
      */
     public List<MatchSnapshot> getSummary() {
-        throw new UnsupportedOperationException("not implemented");
+        return liveMatches.values().stream()
+                .sorted(SUMMARY_ORDER)
+                .map(Match::snapshot)
+                .toList();
+    }
+
+    private Match liveMatch(MatchId matchId) {
+        Match match = liveMatches.get(matchId);
+        if (match == null) {
+            throw new MatchNotFoundException(matchId);
+        }
+        return match;
+    }
+
+    private void requireNotPlaying(Team team) {
+        if (playingTeams.contains(team)) {
+            throw new TeamAlreadyPlayingException(team.name());
+        }
     }
 }
