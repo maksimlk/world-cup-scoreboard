@@ -1,4 +1,4 @@
-package io.github.maksimlk.worldcup.scoreboard.domain;
+package io.github.maksimlk.worldcup.scoreboard.internal.domain;
 
 import java.util.Locale;
 import java.util.Objects;

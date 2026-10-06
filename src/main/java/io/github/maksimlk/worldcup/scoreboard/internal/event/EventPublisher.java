@@ -1,4 +1,4 @@
-package io.github.maksimlk.worldcup.scoreboard.event;
+package io.github.maksimlk.worldcup.scoreboard.internal.event;
 
 import io.github.maksimlk.worldcup.scoreboard.api.event.ScoreboardEvent;
 import io.github.maksimlk.worldcup.scoreboard.api.event.Subscription;

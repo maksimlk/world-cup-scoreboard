@@ -1,8 +1,8 @@
-package io.github.maksimlk.worldcup.scoreboard.repository;
+package io.github.maksimlk.worldcup.scoreboard.internal.repository;
 
 import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
-import io.github.maksimlk.worldcup.scoreboard.domain.Match;
-import io.github.maksimlk.worldcup.scoreboard.domain.TeamName;
+import io.github.maksimlk.worldcup.scoreboard.internal.domain.Match;
+import io.github.maksimlk.worldcup.scoreboard.internal.domain.TeamName;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;

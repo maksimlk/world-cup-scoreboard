@@ -1,4 +1,4 @@
-package io.github.maksimlk.worldcup.scoreboard.domain;
+package io.github.maksimlk.worldcup.scoreboard.internal.domain;
 
 import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
 import io.github.maksimlk.worldcup.scoreboard.api.MatchSnapshot;

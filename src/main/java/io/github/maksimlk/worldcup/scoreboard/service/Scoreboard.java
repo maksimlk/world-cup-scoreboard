@@ -9,15 +9,15 @@ import io.github.maksimlk.worldcup.scoreboard.api.event.MatchStarted;
 import io.github.maksimlk.worldcup.scoreboard.api.event.ScoreChanged;
 import io.github.maksimlk.worldcup.scoreboard.api.event.ScoreboardEvent;
 import io.github.maksimlk.worldcup.scoreboard.api.event.Subscription;
-import io.github.maksimlk.worldcup.scoreboard.domain.Match;
-import io.github.maksimlk.worldcup.scoreboard.domain.TeamName;
-import io.github.maksimlk.worldcup.scoreboard.event.EventPublisher;
 import io.github.maksimlk.worldcup.scoreboard.exception.ListenerFailedException;
 import io.github.maksimlk.worldcup.scoreboard.exception.MatchNotFoundException;
 import io.github.maksimlk.worldcup.scoreboard.exception.NoGoalToCancelException;
 import io.github.maksimlk.worldcup.scoreboard.exception.TeamAlreadyPlayingException;
-import io.github.maksimlk.worldcup.scoreboard.repository.InMemoryMatchRepository;
-import io.github.maksimlk.worldcup.scoreboard.repository.MatchRepository;
+import io.github.maksimlk.worldcup.scoreboard.internal.domain.Match;
+import io.github.maksimlk.worldcup.scoreboard.internal.domain.TeamName;
+import io.github.maksimlk.worldcup.scoreboard.internal.event.EventPublisher;
+import io.github.maksimlk.worldcup.scoreboard.internal.repository.InMemoryMatchRepository;
+import io.github.maksimlk.worldcup.scoreboard.internal.repository.MatchRepository;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -40,8 +40,11 @@ public final class Scoreboard {
         this(new InMemoryMatchRepository());
     }
 
-    /** Creates a scoreboard that keeps matches in the given repository. */
-    public Scoreboard(MatchRepository matches) {
+    /**
+     * Creates a scoreboard that keeps matches in the given repository. Package-private: the
+     * repository is an internal type, so this injection point is for tests, not part of the API.
+     */
+    Scoreboard(MatchRepository matches) {
         this.matches = Objects.requireNonNull(matches, "matches");
     }
 
