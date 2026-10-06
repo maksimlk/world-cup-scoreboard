@@ -45,6 +45,7 @@ The last column lists options the AI agent proposed during the design discussion
 | 12 | **Not thread-safe** (for now) | The task asks for a *simple* library; "multiple simultaneous matches" means many live matches, not many threads. My first choice, lock-free concurrent maps, forced reserve-then-rollback logic, and race tests are non-deterministic | `synchronized` methods or a decorator. Kept in the README as the upgrade path |
 | 13 | SOLID split: `Scoreboard` (service) only orchestrates the four core operations; it depends on a `MatchRepository` interface (storage and id sequence) injected through a public constructor, with `InMemoryMatchRepository` as the default; `Match` (domain) holds the score rules and summary order; `TeamName` (domain) validates and compares names | Single responsibility per class, dependency inversion for storage, and a small `Scoreboard`. Since the types live in separate packages they are public, so callers can also plug in their own repository | All logic and the match map inside `Scoreboard` (an intermediate "minimal code" version); team names as plain strings validated by a helper in `Scoreboard`; a JPMS `module-info.java` (added, then removed: it hid nothing) |
 | 14 | Additional operation: `subscribe(listener)` publishing a sealed `ScoreboardEvent` (`MatchStarted`, `ScoreChanged`, `MatchFinished`), synchronously, in subscription order, only for changes after subscribing; a failing listener does not stop the others and is reported afterwards as `ListenerFailedException`; cancellation via the returned `Subscription` | Live data is consumed by push, not polling; a sealed event type keeps listeners lambda-friendly and lets the compiler check exhaustive handling | Other features: `findLiveMatch`, `correctScore`, pluggable summary ordering, a goal timeline, finished-match history. A listener interface with one method per event; ignoring listener failures or letting the first one propagate; replaying the current state to new subscribers |
+| 15 | Internal packages (`domain`, `repository`, `event`) moved under `...scoreboard.internal`; the public API is `service`, `api`, `api.event` and `exception`; the repository constructor of `Scoreboard` became package-private | Splitting packages by role forced the internals to be public. The `internal` naming is how real libraries (JDK, Netty, Hibernate) mark code that is not API, and the repository is no longer advertised as an extension point | Keeping everything public; moving the internals back next to `Scoreboard` as package-private (undoes the folder-per-role structure); a `module-info.java` exporting only the API (compiler-enforced, but more build complexity) |
 
 ## Brainstorming the additional operation
 
@@ -135,3 +136,8 @@ The instructions that shaped the work, with a short note on what came out of eac
 
    The agent asked three design questions (event shape, listener failures, replay of current state), presented a
    short design, then wrote the failing `SubscribeTest` first and implemented `EventPublisher` (decision 14).
+
+10. > how about it, let's merge additional operation in develop and then do a change there
+
+    After the additional operation was merged, the agent moved the internal packages under `internal` on a separate
+    branch and made the repository constructor package-private, with all tests unchanged (decision 15).

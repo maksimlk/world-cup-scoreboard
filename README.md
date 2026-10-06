@@ -46,10 +46,12 @@ the board.
 
 ## Design and reasoning
 
-- **One job per class, one package per role:** `service` (`Scoreboard`, a thin orchestrator), `domain` (`Match`
-  with the score rules and summary order; `TeamName`, a case-insensitive value object), `repository`
-  (`MatchRepository`, injected through the constructor, with `InMemoryMatchRepository` as the default), `api` (the
-  contract callers use), `event` and `api.event` (the additional operation), `exception`.
+- **One job per class, one package per role.** The public API is `service` (`Scoreboard`, a thin orchestrator),
+  `api` and `api.event` (the contract callers use) and `exception`. Everything else lives under `internal`, following
+  the common library convention (as in `jdk.internal` or `io.netty.util.internal`) that those packages are not API
+  and may change: `internal.domain` (`Match` with the score rules and summary order; `TeamName`, a case-insensitive
+  value object), `internal.repository` (`MatchRepository`, injected into `Scoreboard` through a package-private
+  constructor, with `InMemoryMatchRepository` as the default) and `internal.event` (`EventPublisher`).
 - **Goal events, not absolute scores.** Live feeds push each goal as it happens; an enum makes inputs like `+7`
   impossible. The task's example scores are reached by one event per goal.
 - **Ids double as the start order.** They come from an increasing counter, so tie-breaks never collide and tests
@@ -66,8 +68,9 @@ the board.
 - **No absolute score correction.** A score correction has to be sent as goal events.
 - **Linear scans.** The team-availability check scans live matches, and the summary is sorted on every read. That is
   fine for a few dozen matches; a team index would need changes only in the repository.
-- **Public internals.** Cross-package types must be public, so `Match` and the repository are visible. In return,
-  callers can plug in their own `MatchRepository`.
+- **Internals are hidden by convention, not by the compiler.** Types used across packages must be public, so the
+  classes under `internal` are technically reachable. A `module-info.java` exporting only the API packages would
+  enforce it for module-path users, but was left out to keep the build simple.
 - **In-memory only**, with no history of finished matches.
 
 ## Additional operation: `subscribe`
