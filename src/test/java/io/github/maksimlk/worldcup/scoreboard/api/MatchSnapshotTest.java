@@ -1,4 +1,4 @@
-package io.github.maksimlk.worldcup.scoreboard.model;
+package io.github.maksimlk.worldcup.scoreboard.api;
 
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;

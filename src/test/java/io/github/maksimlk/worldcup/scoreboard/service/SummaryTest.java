@@ -1,14 +1,14 @@
-package io.github.maksimlk.worldcup.scoreboard;
+package io.github.maksimlk.worldcup.scoreboard.service;
 
-import static io.github.maksimlk.worldcup.scoreboard.ScoreboardFixture.startWithScore;
-import static io.github.maksimlk.worldcup.scoreboard.model.ScoreChange.GOAL;
-import static io.github.maksimlk.worldcup.scoreboard.model.ScoreChange.GOAL_CANCELLED;
-import static io.github.maksimlk.worldcup.scoreboard.model.Side.HOME;
+import static io.github.maksimlk.worldcup.scoreboard.api.ScoreChange.GOAL;
+import static io.github.maksimlk.worldcup.scoreboard.api.ScoreChange.GOAL_CANCELLED;
+import static io.github.maksimlk.worldcup.scoreboard.api.Side.HOME;
+import static io.github.maksimlk.worldcup.scoreboard.service.ScoreboardFixture.startWithScore;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
-import io.github.maksimlk.worldcup.scoreboard.model.MatchSnapshot;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchSnapshot;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

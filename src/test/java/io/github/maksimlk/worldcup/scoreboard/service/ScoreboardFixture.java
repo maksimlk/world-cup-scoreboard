@@ -1,10 +1,10 @@
-package io.github.maksimlk.worldcup.scoreboard;
+package io.github.maksimlk.worldcup.scoreboard.service;
 
-import static io.github.maksimlk.worldcup.scoreboard.model.ScoreChange.GOAL;
-import static io.github.maksimlk.worldcup.scoreboard.model.Side.AWAY;
-import static io.github.maksimlk.worldcup.scoreboard.model.Side.HOME;
+import static io.github.maksimlk.worldcup.scoreboard.api.ScoreChange.GOAL;
+import static io.github.maksimlk.worldcup.scoreboard.api.Side.AWAY;
+import static io.github.maksimlk.worldcup.scoreboard.api.Side.HOME;
 
-import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
 
 final class ScoreboardFixture {
 

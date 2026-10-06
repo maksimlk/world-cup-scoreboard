@@ -1,13 +1,13 @@
-package io.github.maksimlk.worldcup.scoreboard;
+package io.github.maksimlk.worldcup.scoreboard.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
+import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchSnapshot;
 import io.github.maksimlk.worldcup.scoreboard.exception.TeamAlreadyPlayingException;
-import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
-import io.github.maksimlk.worldcup.scoreboard.model.MatchSnapshot;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

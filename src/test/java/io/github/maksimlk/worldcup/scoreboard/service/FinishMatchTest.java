@@ -1,13 +1,13 @@
-package io.github.maksimlk.worldcup.scoreboard;
+package io.github.maksimlk.worldcup.scoreboard.service;
 
-import static io.github.maksimlk.worldcup.scoreboard.ScoreboardFixture.UNKNOWN_MATCH_ID;
+import static io.github.maksimlk.worldcup.scoreboard.service.ScoreboardFixture.UNKNOWN_MATCH_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchSnapshot;
 import io.github.maksimlk.worldcup.scoreboard.exception.MatchNotFoundException;
-import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
-import io.github.maksimlk.worldcup.scoreboard.model.MatchSnapshot;
 import org.junit.jupiter.api.Test;
 
 /**

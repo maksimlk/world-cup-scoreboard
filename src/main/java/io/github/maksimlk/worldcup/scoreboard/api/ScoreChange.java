@@ -1,4 +1,4 @@
-package io.github.maksimlk.worldcup.scoreboard.model;
+package io.github.maksimlk.worldcup.scoreboard.api;
 
 /** A single score event in a live match. */
 public enum ScoreChange {

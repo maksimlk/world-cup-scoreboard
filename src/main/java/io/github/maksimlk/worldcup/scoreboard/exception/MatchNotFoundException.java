@@ -1,6 +1,6 @@
 package io.github.maksimlk.worldcup.scoreboard.exception;
 
-import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
 import java.io.Serial;
 
 /** Thrown when a match id is unknown to the scoreboard or the match has already finished. */

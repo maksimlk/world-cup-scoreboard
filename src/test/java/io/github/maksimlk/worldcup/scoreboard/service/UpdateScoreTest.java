@@ -1,21 +1,21 @@
-package io.github.maksimlk.worldcup.scoreboard;
+package io.github.maksimlk.worldcup.scoreboard.service;
 
-import static io.github.maksimlk.worldcup.scoreboard.ScoreboardFixture.UNKNOWN_MATCH_ID;
-import static io.github.maksimlk.worldcup.scoreboard.ScoreboardFixture.startWithScore;
-import static io.github.maksimlk.worldcup.scoreboard.model.ScoreChange.GOAL;
-import static io.github.maksimlk.worldcup.scoreboard.model.ScoreChange.GOAL_CANCELLED;
-import static io.github.maksimlk.worldcup.scoreboard.model.Side.AWAY;
-import static io.github.maksimlk.worldcup.scoreboard.model.Side.HOME;
+import static io.github.maksimlk.worldcup.scoreboard.api.ScoreChange.GOAL;
+import static io.github.maksimlk.worldcup.scoreboard.api.ScoreChange.GOAL_CANCELLED;
+import static io.github.maksimlk.worldcup.scoreboard.api.Side.AWAY;
+import static io.github.maksimlk.worldcup.scoreboard.api.Side.HOME;
+import static io.github.maksimlk.worldcup.scoreboard.service.ScoreboardFixture.UNKNOWN_MATCH_ID;
+import static io.github.maksimlk.worldcup.scoreboard.service.ScoreboardFixture.startWithScore;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchSnapshot;
+import io.github.maksimlk.worldcup.scoreboard.api.ScoreChange;
+import io.github.maksimlk.worldcup.scoreboard.api.Side;
 import io.github.maksimlk.worldcup.scoreboard.exception.MatchNotFoundException;
 import io.github.maksimlk.worldcup.scoreboard.exception.NoGoalToCancelException;
-import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
-import io.github.maksimlk.worldcup.scoreboard.model.MatchSnapshot;
-import io.github.maksimlk.worldcup.scoreboard.model.ScoreChange;
-import io.github.maksimlk.worldcup.scoreboard.model.Side;
 import org.junit.jupiter.api.Test;
 
 /**

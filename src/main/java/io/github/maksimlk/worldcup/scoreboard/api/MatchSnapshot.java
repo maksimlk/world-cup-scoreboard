@@ -1,9 +1,9 @@
-package io.github.maksimlk.worldcup.scoreboard.model;
+package io.github.maksimlk.worldcup.scoreboard.api;
 
 import java.util.Objects;
 
 /**
- * An immutable view of a live match at the moment the summary was taken.
+ * An immutable view of a live match at the moment it was taken.
  *
  * @param id        the match id
  * @param homeTeam  the home team name

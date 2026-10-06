@@ -1,7 +1,7 @@
 package io.github.maksimlk.worldcup.scoreboard.exception;
 
-import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
-import io.github.maksimlk.worldcup.scoreboard.model.Side;
+import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
+import io.github.maksimlk.worldcup.scoreboard.api.Side;
 import java.io.Serial;
 import java.util.Locale;
 
