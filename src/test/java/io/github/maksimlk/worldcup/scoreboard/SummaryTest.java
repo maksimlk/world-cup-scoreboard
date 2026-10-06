@@ -6,7 +6,6 @@ import static io.github.maksimlk.worldcup.scoreboard.model.ScoreChange.GOAL_CANC
 import static io.github.maksimlk.worldcup.scoreboard.model.Side.HOME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 
 import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
 import io.github.maksimlk.worldcup.scoreboard.model.MatchSnapshot;
@@ -38,14 +37,17 @@ class SummaryTest {
         startWithScore(scoreboard, "Argentina", "Australia", 3, 1);
 
         assertThat(scoreboard.getSummary())
-                .extracting(MatchSnapshot::homeTeam, MatchSnapshot::homeScore,
-                        MatchSnapshot::awayTeam, MatchSnapshot::awayScore)
+                .extracting(SummaryTest::asScoreLine)
                 .containsExactly(
-                        tuple("Uruguay", 6, "Italy", 6),
-                        tuple("Spain", 10, "Brazil", 2),
-                        tuple("Mexico", 0, "Canada", 5),
-                        tuple("Argentina", 3, "Australia", 1),
-                        tuple("Germany", 2, "France", 2));
+                        "Uruguay 6 - Italy 6",
+                        "Spain 10 - Brazil 2",
+                        "Mexico 0 - Canada 5",
+                        "Argentina 3 - Australia 1",
+                        "Germany 2 - France 2");
+    }
+
+    private static String asScoreLine(MatchSnapshot match) {
+        return match.homeTeam() + " " + match.homeScore() + " - " + match.awayTeam() + " " + match.awayScore();
     }
 
     @Test
