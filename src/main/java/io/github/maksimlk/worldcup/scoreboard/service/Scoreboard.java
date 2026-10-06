@@ -4,8 +4,11 @@ import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
 import io.github.maksimlk.worldcup.scoreboard.api.MatchSnapshot;
 import io.github.maksimlk.worldcup.scoreboard.api.ScoreChange;
 import io.github.maksimlk.worldcup.scoreboard.api.Side;
+import io.github.maksimlk.worldcup.scoreboard.api.event.ScoreboardEvent;
+import io.github.maksimlk.worldcup.scoreboard.api.event.Subscription;
 import io.github.maksimlk.worldcup.scoreboard.domain.Match;
 import io.github.maksimlk.worldcup.scoreboard.domain.TeamName;
+import io.github.maksimlk.worldcup.scoreboard.exception.ListenerFailedException;
 import io.github.maksimlk.worldcup.scoreboard.exception.MatchNotFoundException;
 import io.github.maksimlk.worldcup.scoreboard.exception.NoGoalToCancelException;
 import io.github.maksimlk.worldcup.scoreboard.exception.TeamAlreadyPlayingException;
@@ -13,6 +16,7 @@ import io.github.maksimlk.worldcup.scoreboard.repository.InMemoryMatchRepository
 import io.github.maksimlk.worldcup.scoreboard.repository.MatchRepository;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Tracks live football World Cup matches.
@@ -98,6 +102,22 @@ public final class Scoreboard {
                 .sorted(Match.SUMMARY_ORDER)
                 .map(Match::snapshot)
                 .toList();
+    }
+
+    /**
+     * Subscribes a listener to changes on the scoreboard. The listener receives a
+     * {@link ScoreboardEvent} after each successful start, score update and finish, synchronously
+     * and in subscription order. Only changes made after subscribing are delivered; call
+     * {@link #getSummary()} first for the current state. Rejected calls publish nothing.
+     *
+     * <p>If listeners throw, every listener still receives the event and the operation then throws
+     * {@link ListenerFailedException}; the change itself has been applied.
+     *
+     * @return the subscription, used to stop receiving events
+     * @throws NullPointerException if the listener is {@code null}
+     */
+    public Subscription subscribe(Consumer<ScoreboardEvent> listener) {
+        throw new UnsupportedOperationException("not implemented");
     }
 
     private Match liveMatch(MatchId matchId) {
