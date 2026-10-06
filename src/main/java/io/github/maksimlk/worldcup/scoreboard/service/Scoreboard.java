@@ -68,6 +68,8 @@ public final class Scoreboard {
      * @throws NoGoalToCancelException if a goal is cancelled for a side with a score of zero
      */
     public void updateScore(MatchId matchId, Side side, ScoreChange change) {
+        Objects.requireNonNull(side, "side");
+        Objects.requireNonNull(change, "change");
         Match match = liveMatch(matchId);
         match.apply(side, change);
         matches.save(match);
