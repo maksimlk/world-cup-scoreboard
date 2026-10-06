@@ -35,19 +35,19 @@ The last column lists options the AI agent proposed during the design discussion
 | 2 | Matches are identified by a `MatchId` returned from `startMatch` | The same two teams can meet more than once in a tournament (group stage and knockout) | Identifying a match by its team pair |
 | 3 | Score changes are events: `updateScore(id, side, GOAL \| GOAL_CANCELLED)` | Fits live monitoring: each goal is pushed as it happens. Cancellation covers VAR. An enum prevents meaningless inputs such as `+7` | Absolute `updateScore(home, away)`; separate `goalScored`/`goalCancelled` methods; signed integer delta |
 | 4 | A score can never go below zero | Cancelling a goal that never happened is a caller error | — |
-| 4a | Domain errors use custom exceptions (`MatchNotFoundException`, `TeamAlreadyPlayingException`, `NoGoalToCancelException`) under one `ScoreboardException` base; argument errors use standard Java exceptions | Callers can catch all rule violations in one place; consistent rule for when a custom type is used | `IllegalStateException` for cancelling a goal at zero (first version) |
-| 5 | Team names are trimmed and compared ignoring case; a team cannot play itself or be in two live matches at once | Prevents duplicate or impossible live matches caused by input noise | — |
-| 6 | One counter provides both `MatchId` and the start order used for tie-breaks | Fewer moving parts. A clock can tie within the same millisecond; a counter never ties | Separate schedule and start operations, making scheduling the one extra feature |
-| 7 | A finished match is removed from the board | The spec only asks for matches in progress | Keeping it with a `FINISHED` status |
-| 8 | Packages: root (`Scoreboard`), `model`, `exception` under `io.github.maksimlk.worldcup.scoreboard` | Package name matches the project; subpackages separate the API types | A single flat package (favouring package-private encapsulation); only exceptions in a subpackage |
-| 9 | One test class per operation, plus a shared test fixture | Smaller files and focused test classes | One large test class with `@Nested` groups |
-| 10 | Tests are documented at class level (rules covered), with comments only where the intent is not obvious | Test names already describe behaviour; per-test Javadoc would duplicate them and drift | `@DisplayName` on every test |
-| 11 | **Not thread-safe** (for now) | The task asks for a *simple* library; "multiple simultaneous matches" means many live matches, not many threads. My first choice, lock-free concurrent maps, forced reserve-then-rollback logic, and race tests are non-deterministic | `synchronized` methods or a decorator. Kept in the README as the upgrade path |
-| 12 | `Scoreboard` coordinates; package-private `Team` (name normalisation) and `Match` (score rules) hold the logic | One job per class; internals stay hidden by package-private access | All logic inside `Scoreboard`; a JPMS `module-info.java` (added, then removed: all packages were exported, so it hid nothing and added complexity) |
+| 5 | Domain errors use custom exceptions (`MatchNotFoundException`, `TeamAlreadyPlayingException`, `NoGoalToCancelException`) under one `ScoreboardException` base; argument errors use standard Java exceptions | Callers can catch all rule violations in one place; consistent rule for when a custom type is used | `IllegalStateException` for cancelling a goal at zero (first version) |
+| 6 | Team names are trimmed and compared ignoring case; a team cannot play itself or be in two live matches at once | Prevents duplicate or impossible live matches caused by input noise | — |
+| 7 | One counter provides both `MatchId` and the start order used for tie-breaks | Fewer moving parts. A clock can tie within the same millisecond; a counter never ties | Separate schedule and start operations, making scheduling the one extra feature |
+| 8 | A finished match is removed from the board | The spec only asks for matches in progress | Keeping it with a `FINISHED` status |
+| 9 | One package per responsibility under `io.github.maksimlk.worldcup.scoreboard`: `service` (`Scoreboard`), `domain` (`Match`, `TeamName`), `repository`, `api` (the contract: `MatchId`, `MatchSnapshot`, `Side`, `ScoreChange`), `exception` | Package name matches the project; the folder structure mirrors the SOLID split. `api` holds what callers use, `domain` how the rules work, so each class's role is visible from its location | A single flat package (favouring package-private encapsulation); keeping the internals package-private in the root package; naming the contract package `model`, which blurred it with `domain` |
+| 10 | One test class per operation, plus a shared test fixture | Smaller files and focused test classes | One large test class with `@Nested` groups |
+| 11 | Tests are documented at class level (rules covered), with comments only where the intent is not obvious | Test names already describe behaviour; per-test Javadoc would duplicate them and drift | `@DisplayName` on every test |
+| 12 | **Not thread-safe** (for now) | The task asks for a *simple* library; "multiple simultaneous matches" means many live matches, not many threads. My first choice, lock-free concurrent maps, forced reserve-then-rollback logic, and race tests are non-deterministic | `synchronized` methods or a decorator. Kept in the README as the upgrade path |
+| 13 | SOLID split: `Scoreboard` (service) only orchestrates the four core operations; it depends on a `MatchRepository` interface (storage and id sequence) injected through a public constructor, with `InMemoryMatchRepository` as the default; `Match` (domain) holds the score rules and summary order; `TeamName` (domain) validates and compares names | Single responsibility per class, dependency inversion for storage, and a small `Scoreboard`. Since the types live in separate packages they are public, so callers can also plug in their own repository | All logic and the match map inside `Scoreboard` (an intermediate "minimal code" version); team names as plain strings validated by a helper in `Scoreboard`; a JPMS `module-info.java` (added, then removed: it hid nothing) |
 
 ## Prompt history
 
-The most important prompts, with a short note on what came out of each.
+The instructions that shaped the work, with a short note on what came out of each.
 
 1. > You are a principal software engineer. Our current task is under /docs/odds-and-data-coding-task-sportradar.pdf.
    > We need to implement core operations for live world cup scoreboard. Let's follow TDD and start with creating tests
@@ -72,26 +72,28 @@ The most important prompts, with a short note on what came out of each.
 
 4. > In this case, let's not separate matchId and starting time since it would make implementation more complex
 
-   One counter for id and start order (decision 6). The agent wrote the full test suite plus compile-only stubs, and
+   One counter for id and start order (decision 7). The agent wrote the full test suite plus compile-only stubs, and
    confirmed every test failed.
 
 5. > Don't store all project files under one package. Create packages according to the purpose of the file and store them there.
    > Also, don't cram all the tests in a single file. Split them according to purpose.
 
    This led to the `model`/`exception` subpackages, a package name matching the project, and one test class per
-   operation (decisions 8 and 9).
+   operation (decisions 9 and 10).
 
-6. > Verify your work, did you follow all the clean code and TDD principles?
+6. > Your code does not follow clean code and SOLID principles. There should be a separate repository that would
+   > contain liveMatches. Make sure you follow SOLID
 
-   The agent's self-review admitted these gaps, which were then fixed:
-   - all tests were written in one batch;
-   - a concurrency test counted any exception as success (a bug);
-   - several tests checked more than one behaviour;
-   - error tests did not check that state was unchanged;
-   - a magic id was used instead of a named constant.
+   The agent extracted `MatchRepository` and `InMemoryMatchRepository`, injected into `Scoreboard` through its
+   constructor, keeping the public API and all tests unchanged (decision 13).
 
-7. > ok, do you think we followed the task given well? Aren't we overcomplicating with concurrency?
+7. > Please put each class into a corresponding folder according to SOLID
 
-   The agent agreed thread safety was not required and added complexity, so the concurrency tests were dropped
-   (decision 11). It also flagged README items: the goal-event update style needs explaining, and the extra feature
-   is still to be chosen.
+   The agent moved the classes into `service`, `domain` and `repository` packages next to `model` (later renamed `api`) and `exception`,
+   made the cross-package types public, and moved the `Scoreboard` tests to match (decision 9).
+
+8. > scoreboard class contains too many methods and is too overcomplicated
+
+   The public methods are required by the task, so the agent moved everything else out: name validation into a
+   `TeamName` value type, the summary order and argument checks into `Match`, leaving `Scoreboard` as a thin
+   orchestrator. Tests unchanged (decision 13).
