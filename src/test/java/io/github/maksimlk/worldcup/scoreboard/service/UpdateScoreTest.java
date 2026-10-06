@@ -94,6 +94,17 @@ class UpdateScoreTest {
                 .isInstanceOf(MatchNotFoundException.class);
     }
 
+    /** Null arguments are reported as such, even when the match id is also unknown. */
+    @Test
+    void rejectsNullSideBeforeLookingUpMatch() {
+        assertThatNullPointerException().isThrownBy(() -> scoreboard.updateScore(UNKNOWN_MATCH_ID, null, GOAL));
+    }
+
+    @Test
+    void rejectsNullChangeBeforeLookingUpMatch() {
+        assertThatNullPointerException().isThrownBy(() -> scoreboard.updateScore(UNKNOWN_MATCH_ID, HOME, null));
+    }
+
     @Test
     void rejectsNullMatchId() {
         assertThatNullPointerException().isThrownBy(() -> scoreboard.updateScore(null, HOME, GOAL));
