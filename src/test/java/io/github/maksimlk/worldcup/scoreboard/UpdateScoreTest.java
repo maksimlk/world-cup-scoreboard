@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.maksimlk.worldcup.scoreboard.exception.MatchNotFoundException;
+import io.github.maksimlk.worldcup.scoreboard.exception.NoGoalToCancelException;
 import io.github.maksimlk.worldcup.scoreboard.model.MatchId;
 import io.github.maksimlk.worldcup.scoreboard.model.MatchSnapshot;
 import io.github.maksimlk.worldcup.scoreboard.model.ScoreChange;
@@ -73,7 +74,7 @@ class UpdateScoreTest {
         MatchId id = startWithScore(scoreboard, "Mexico", "Canada", 0, 3);
 
         assertThatThrownBy(() -> scoreboard.updateScore(id, HOME, GOAL_CANCELLED))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(NoGoalToCancelException.class);
         assertThat(scoreboard.getSummary())
                 .containsExactly(new MatchSnapshot(id, "Mexico", "Canada", 0, 3));
     }
