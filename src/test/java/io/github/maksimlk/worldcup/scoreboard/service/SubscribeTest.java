@@ -156,6 +156,17 @@ class SubscribeTest {
     }
 
     @Test
+    void listenerCancelledDuringDeliveryMissesTheCurrentEvent() {
+        Subscription[] later = new Subscription[1];
+        scoreboard.subscribe(event -> later[0].cancel());
+        later[0] = scoreboard.subscribe(events::add);
+
+        scoreboard.startMatch("Mexico", "Canada");
+
+        assertThat(events).isEmpty();
+    }
+
+    @Test
     void failingListenerDoesNotStopOthersAndIsReported() {
         RuntimeException failure = new IllegalStateException("dashboard down");
         scoreboard.subscribe(event -> {

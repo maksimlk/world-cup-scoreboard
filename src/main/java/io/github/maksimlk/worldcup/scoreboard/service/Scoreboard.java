@@ -4,10 +4,14 @@ import io.github.maksimlk.worldcup.scoreboard.api.MatchId;
 import io.github.maksimlk.worldcup.scoreboard.api.MatchSnapshot;
 import io.github.maksimlk.worldcup.scoreboard.api.ScoreChange;
 import io.github.maksimlk.worldcup.scoreboard.api.Side;
+import io.github.maksimlk.worldcup.scoreboard.api.event.MatchFinished;
+import io.github.maksimlk.worldcup.scoreboard.api.event.MatchStarted;
+import io.github.maksimlk.worldcup.scoreboard.api.event.ScoreChanged;
 import io.github.maksimlk.worldcup.scoreboard.api.event.ScoreboardEvent;
 import io.github.maksimlk.worldcup.scoreboard.api.event.Subscription;
 import io.github.maksimlk.worldcup.scoreboard.domain.Match;
 import io.github.maksimlk.worldcup.scoreboard.domain.TeamName;
+import io.github.maksimlk.worldcup.scoreboard.event.EventPublisher;
 import io.github.maksimlk.worldcup.scoreboard.exception.ListenerFailedException;
 import io.github.maksimlk.worldcup.scoreboard.exception.MatchNotFoundException;
 import io.github.maksimlk.worldcup.scoreboard.exception.NoGoalToCancelException;
@@ -29,6 +33,7 @@ import java.util.function.Consumer;
 public final class Scoreboard {
 
     private final MatchRepository matches;
+    private final EventPublisher events = new EventPublisher();
 
     /** Creates an empty scoreboard that keeps matches in memory. */
     public Scoreboard() {
@@ -47,6 +52,7 @@ public final class Scoreboard {
      * @throws NullPointerException if a team name is {@code null}
      * @throws IllegalArgumentException if a team name is blank or both names denote the same team
      * @throws TeamAlreadyPlayingException if either team is already playing in a live match
+     * @throws ListenerFailedException if a subscribed listener failed; the match has been started
      */
     public MatchId startMatch(String homeTeam, String awayTeam) {
         TeamName home = new TeamName(homeTeam);
@@ -61,6 +67,7 @@ public final class Scoreboard {
         }
         Match match = new Match(matches.nextId(), home, away);
         matches.save(match);
+        events.publish(new MatchStarted(match.snapshot()));
         return match.id();
     }
 
@@ -70,6 +77,7 @@ public final class Scoreboard {
      * @throws NullPointerException if any argument is {@code null}
      * @throws MatchNotFoundException if the match is unknown or already finished
      * @throws NoGoalToCancelException if a goal is cancelled for a side with a score of zero
+     * @throws ListenerFailedException if a subscribed listener failed; the score has been updated
      */
     public void updateScore(MatchId matchId, Side side, ScoreChange change) {
         Objects.requireNonNull(side, "side");
@@ -77,6 +85,7 @@ public final class Scoreboard {
         Match match = liveMatch(matchId);
         match.apply(side, change);
         matches.save(match);
+        events.publish(new ScoreChanged(match.snapshot(), side, change));
     }
 
     /**
@@ -84,11 +93,12 @@ public final class Scoreboard {
      *
      * @throws NullPointerException if the id is {@code null}
      * @throws MatchNotFoundException if the match is unknown or already finished
+     * @throws ListenerFailedException if a subscribed listener failed; the match has been finished
      */
     public void finishMatch(MatchId matchId) {
-        if (!matches.remove(Objects.requireNonNull(matchId, "matchId"))) {
-            throw new MatchNotFoundException(matchId);
-        }
+        Match match = liveMatch(matchId);
+        matches.remove(matchId);
+        events.publish(new MatchFinished(match.snapshot()));
     }
 
     /**
@@ -117,7 +127,7 @@ public final class Scoreboard {
      * @throws NullPointerException if the listener is {@code null}
      */
     public Subscription subscribe(Consumer<ScoreboardEvent> listener) {
-        throw new UnsupportedOperationException("not implemented");
+        return events.subscribe(listener);
     }
 
     private Match liveMatch(MatchId matchId) {
